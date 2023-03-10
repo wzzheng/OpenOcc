@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 .DS_Store
+
+ckpts/
+data/
+out/
