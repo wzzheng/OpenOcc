@@ -1,1 +1,1 @@
-from .tpvformer_segmentor import TPVFormer
+from .tpv_segmentor import TPVSegmentor

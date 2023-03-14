@@ -1,5 +1,7 @@
 from mmcv.runner import BaseModule
+from mmcv.runner import force_fp32, auto_fp16
 from mmseg.models import SEGMENTORS, builder
+from mmdet3d.models import build_neck
 
 @SEGMENTORS.register_module()
 class CustomBaseSegmentor(BaseModule):
@@ -18,7 +20,10 @@ class CustomBaseSegmentor(BaseModule):
         if img_backbone is not None:
             self.img_backbone = builder.build_backbone(img_backbone)
         if img_neck is not None:
-            self.img_neck = builder.build_neck(img_neck)
+            try:
+                self.img_neck = builder.build_neck(img_neck)
+            except:
+                self.img_neck = build_neck(img_neck)
         if lifter is not None:
             self.lifter = builder.build_head(lifter)
         if encoder is not None:
@@ -26,6 +31,7 @@ class CustomBaseSegmentor(BaseModule):
         if head is not None:
             self.head = builder.build_head(head)
 
+    @auto_fp16(apply_to=('img'))
     def extract_img_feat(self, img):
         """Extract features of images."""
         B = img.size(0)

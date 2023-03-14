@@ -82,7 +82,7 @@ val_wrapper = dict(
             permute_order=[2, 0, 1],)],
     pointcloudModal = pointcloudModal)
 
-max_epochs = 12
+max_num_epochs = 12
 load_from = './ckpts/resnet50-0676ba61.pth'
 
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
@@ -180,7 +180,7 @@ tpv_encoder_layers = [
 ]
 
 model = dict(
-    type='TPVFormer',
+    type='TPVSegmentor',
     img_backbone=dict(
         type='ResNet',
         depth=50,
