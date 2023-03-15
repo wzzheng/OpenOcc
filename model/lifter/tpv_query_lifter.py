@@ -17,5 +17,5 @@ class TPVQueryLifter(BaseLifter):
         self.tpv_zh = nn.Parameter(torch.randn(tpv_z * tpv_h, embed_dims))
         self.tpv_wz = nn.Parameter(torch.randn(tpv_w * tpv_z, embed_dims))
 
-    def forward(self, **kwargs):
+    def forward(self,*args, **kwargs):
         return self.tpv_hw, self.tpv_zh, self.tpv_wz

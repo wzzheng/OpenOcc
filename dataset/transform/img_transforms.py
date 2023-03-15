@@ -321,6 +321,13 @@ class RandomScaleImageMultiViewImage(BaseTransform):
                           enumerate(results['img'])]
         lidar2img = [scale_factor @ l2i for l2i in results['lidar2img']]
         results['lidar2img'] = lidar2img
+        if 'img2lidar' in results:
+            inv_scale_factor = np.linalg.inv(scale_factor)
+            img2lidar = [i2l @ inv_scale_factor for i2l in results['img2lidar']]
+            results['img2lidar'] = img2lidar
+        if 'intrinsic' in results:
+            intrinsic = [scale_factor @ intr for intr in results['intrinsic']]
+            results['intrinsic'] = intrinsic
         results['img_shape'] = [img.shape for img in results['img']]
         results['ori_shape'] = [img.shape for img in results['img']]
 

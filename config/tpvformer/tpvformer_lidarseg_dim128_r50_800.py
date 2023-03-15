@@ -29,11 +29,16 @@ train_wrapper = dict(
     img_transforms = [
         dict(
             type='PhotoMetricDistortionMultiViewImage'),
+        # dict(
+        #     type='NormalizeMultiviewImage',
+        #     mean=[103.530, 116.280, 123.675], 
+        #     std=[1.0, 1.0, 1.0], 
+        #     to_rgb=False),
         dict(
             type='NormalizeMultiviewImage',
-            mean=[103.530, 116.280, 123.675], 
-            std=[1.0, 1.0, 1.0], 
-            to_rgb=False),
+            mean=[123.675, 116.28, 103.53], 
+            std=[58.395, 57.12, 57.375], 
+            to_rgb=True),
         dict(
             type='RandomScaleImageMultiViewImage',
             scales=[0.5]),
@@ -66,11 +71,16 @@ val_wrapper = dict(
         return_img=True,
         return_pts=True,),
     img_transforms = [
+        # dict(
+        #     type='NormalizeMultiviewImage',
+        #     mean=[103.530, 116.280, 123.675], 
+        #     std=[1.0, 1.0, 1.0], 
+        #     to_rgb=False),
         dict(
             type='NormalizeMultiviewImage',
-            mean=[103.530, 116.280, 123.675], 
-            std=[1.0, 1.0, 1.0], 
-            to_rgb=False),
+            mean=[123.675, 116.28, 103.53], 
+            std=[58.395, 57.12, 57.375], 
+            to_rgb=True),
         dict(
             type='RandomScaleImageMultiViewImage',
             scales=[0.5]),
@@ -108,7 +118,7 @@ hybrid_attn_points = 32
 hybrid_attn_init = 0
 
 grid_size = [tpv_h_*scale_h, tpv_w_*scale_w, tpv_z_*scale_z]
-nbr_class = 18
+nbr_class = 17
 
 # ============= MODEL ===============
 
@@ -176,24 +186,34 @@ self_layer = dict(
 tpv_encoder_layers = [
     self_cross_layer, 
     self_cross_layer,
-    self_cross_layer,   
+    self_cross_layer,
+    self_layer,
+    self_layer,
 ]
 
 model = dict(
     type='TPVSegmentor',
+    # img_backbone=dict(
+    #     type='ResNet',
+    #     depth=50,
+    #     num_stages=4,
+    #     out_indices=(1,2,3),
+    #     frozen_stages=1,
+    #     norm_cfg=dict(type='BN', requires_grad=True),
+    #     norm_eval=True,
+    #     style='pytorch',
+    #     ),
     img_backbone=dict(
         type='ResNet',
         depth=50,
         num_stages=4,
-        out_indices=(1,2,3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        norm_eval=True,
-        style='pytorch',
-        ),
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=0,
+        norm_eval=False,
+        style='pytorch',),
     img_neck=dict(
         type='FPN',
-        in_channels=[512, 1024, 2048],
+        in_channels=[256, 512, 1024, 2048],
         out_channels=_dim_,
         start_level=0,
         add_extra_convs='on_output',
