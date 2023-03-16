@@ -61,10 +61,77 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 | :white_check_mark: |      | Cross-entropy loss                    |
 | :white_check_mark: |      | [Lovasz-softmax loss](Lovasz-softmax) |
 
-## How to use
+# Model Zoo
 
-[installation](docs/installation.md)
+Coming soon.
 
-[prepare_dataset](docs/prepare_dataset.md)
+# How to use
 
-[getting_started](docs/get_started.md)
+## Installation
+
+1. Create conda environment with python version 3.8
+
+2. Install pytorch and torchvision with versions specified in requirements.txt
+
+3. Follow instructions in https://mmdetection3d.readthedocs.io/en/latest/getting_started.html#installation to install mmcv-full, mmdet, mmsegmentation, mmdet3d with versions specified in requirements.txt
+
+4. Install timm, numba and pyyaml with versions specified in requirements.txt
+
+5. Install cuda extensions.
+
+```
+python setup.py develop
+```
+
+## Preparing
+
+1. Download pretrain weights and put them in ckpts/
+
+```
+# ImageNet-1K pretrained ResNet50, same as torchvision://resnet50
+https://cloud.tsinghua.edu.cn/f/3d0cea3f6ac24e019cea/?dl=1
+```
+
+2. Create soft link from data/nuscenes to your_nuscenes_path.
+   The dataset should be organized as follows:
+
+```
+TPVFormer/data
+    nuscenes                 -    downloaded from www.nuscenes.org
+        lidarseg
+        maps
+        samples
+        sweeps
+        v1.0-trainval
+    nuscenes_infos_train.pkl
+    nuscenes_infos_val.pkl
+```
+
+3. Download train/val pickle files and put them in data/
+   nuscenes_infos_train.pkl
+   https://cloud.tsinghua.edu.cn/f/ede3023e01874b26bead/?dl=1
+   nuscenes_infos_val.pkl
+   https://cloud.tsinghua.edu.cn/f/61d839064a334630ac55/?dl=1
+
+## Getting Started
+
+### Training
+
+1. Train TPVFormer for lidar segmentation task.
+
+```
+bash launcher.sh config/tpvformer/tpvformer_lidarseg_dim128_r50_800.py out/tpvformer_lidarseg_dim128_r50_800
+```
+
+2. Train TPVConv with PlainLSSLifter for lidar segmentation task.
+
+```
+bash launcher.sh config/tpvconv/tpvconv_lidarseg_dim384_r50_800_layer10.py out/tpvconv_lidarseg_dim384_r50_800_layer10
+```
+
+3. Train TPVConv with DepthLSSLifter for lidar segmentation task.
+
+```
+bash launcher.sh config/tpvconv/tpvconv_lidarseg_dim384_r50_800_layer10_depthlss.py out/tpvconv_lidarseg_dim384_r50_800_layer10_depthlss
+```
+
