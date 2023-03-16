@@ -31,18 +31,16 @@ class ImagePointWrapper(BaseWrapper):
             imgs = metas.pop('img')
         
         grid_ind_float, _, processed_label = self.pointcloudModal.to_voxel(xyz, labels)
-
-        processed_label = processed_label.astype(np.int)
-        labels = labels.astype(np.int)
-
-        # data_tuple = (imgs, metas, processed_label, grid_ind_float, labels)
+        depth_map = self.pointcloudModal.to_depth_map(
+            xyz, np.stack(metas['lidar2img']), metas['img_shape'][0][:2])
 
         data_dict = {
             'imgs': imgs,
             'metas': metas,
             'processed_label': processed_label,
             'grid_ind_float': grid_ind_float,
-            'labels': labels
+            'labels': labels,
+            'depth_target': depth_map
         }
 
         return data_dict

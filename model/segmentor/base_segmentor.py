@@ -31,14 +31,14 @@ class CustomBaseSegmentor(BaseModule):
         if head is not None:
             self.head = builder.build_head(head)
 
-    @auto_fp16(apply_to=('img'))
-    def extract_img_feat(self, img):
+    @auto_fp16(apply_to=('imgs'))
+    def extract_img_feat(self, imgs, **kwargs):
         """Extract features of images."""
-        B = img.size(0)
+        B = imgs.size(0)
 
-        B, N, C, H, W = img.size()
-        img = img.reshape(B * N, C, H, W)
-        img_feats = self.img_backbone(img)
+        B, N, C, H, W = imgs.size()
+        imgs = imgs.reshape(B * N, C, H, W)
+        img_feats = self.img_backbone(imgs)
         if isinstance(img_feats, dict):
             img_feats = list(img_feats.values())
         img_feats = self.img_neck(img_feats)
@@ -47,7 +47,7 @@ class CustomBaseSegmentor(BaseModule):
         for img_feat in img_feats:
             BN, C, H, W = img_feat.size()
             img_feats_reshaped.append(img_feat.view(B, int(BN / B), C, H, W))
-        return img_feats_reshaped
+        return {'ms_img_feats': img_feats_reshaped}
 
     def forward(
         self,

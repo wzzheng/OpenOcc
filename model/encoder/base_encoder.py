@@ -14,7 +14,7 @@ class BaseEncoder(BaseModule):
     def forward(
         self, 
         representation,
-        img_feats=None,
+        ms_img_feats=None,
         metas=None,
         **kwargs
     ):

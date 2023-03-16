@@ -44,3 +44,11 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 | ------------------ | ---- | ------------------------------------- |
 | :white_check_mark: |      | Cross-entropy loss                    |
 | :white_check_mark: |      | [Lovasz-softmax loss](Lovasz-softmax) |
+
+## How to use
+
+[installation](docs/installation.md)
+
+[prepare_dataset](docs/prepare_dataset.md)
+
+[getting_started](docs/get_started.md)

@@ -24,8 +24,17 @@ class TPVSegmentor(CustomBaseSegmentor):
         ):
         """Forward training function.
         """
-        img_feats = self.extract_img_feat(img=imgs)
-        tpv = self.lifter(img_feats, metas)
-        tpv = self.encoder(tpv, img_feats, metas)
-        outs = self.head(tpv, points)
-        return outs
+        results = {
+            'imgs': imgs,
+            'metas': metas,
+            'points': points
+        }
+        outs = self.extract_img_feat(**results)
+        results.update(outs)
+        outs = self.lifter(**results)
+        results.update(outs)
+        outs = self.encoder(**results)
+        results.update(outs)
+        outs = self.head(**results)
+        results.update(outs)
+        return results
