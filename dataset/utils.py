@@ -27,3 +27,12 @@ def custom_collate_fn(data):
             raise NotImplementedError
     
     return data_dict
+
+def convert_inputs(inputs, dataset_type):
+    if dataset_type == 'NuScenes3DOCP':
+        results = dict()
+        for key, datacontainer in inputs.items():
+            results[key] = datacontainer.data[0]
+        return results
+    else:
+        return inputs

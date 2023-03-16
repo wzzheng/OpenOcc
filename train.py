@@ -32,30 +32,34 @@ def main(local_rank, args):
     # load config
     cfg = Config.fromfile(args.py_config)
     cfg.work_dir = args.work_dir
+    cfg.distributed = args.dist
 
     # init DDP
-    distributed = True
-    ip = os.environ.get("MASTER_ADDR", "127.0.0.1")
-    port = os.environ.get("MASTER_PORT", "20506")
-    hosts = int(os.environ.get("WORLD_SIZE", 1))  # number of nodes
-    rank = int(os.environ.get("RANK", 0))  # node id
-    gpus = torch.cuda.device_count()  # gpus per node
-    print(f"tcp://{ip}:{port}")
-    dist.init_process_group(
-        backend="nccl", init_method=f"tcp://{ip}:{port}", 
-        world_size=hosts * gpus, rank=rank * gpus + local_rank
-    )
-    world_size = dist.get_world_size()
-    cfg.gpu_ids = range(world_size)
-    torch.cuda.set_device(local_rank)
+    if cfg.distributed:
+        ip = os.environ.get("MASTER_ADDR", "127.0.0.1")
+        port = os.environ.get("MASTER_PORT", "20506")
+        hosts = int(os.environ.get("WORLD_SIZE", 1))  # number of nodes
+        rank = int(os.environ.get("RANK", 0))  # node id
+        gpus = torch.cuda.device_count()  # gpus per node
+        print(f"tcp://{ip}:{port}")
+        dist.init_process_group(
+            backend="nccl", init_method=f"tcp://{ip}:{port}", 
+            world_size=hosts * gpus, rank=rank * gpus + local_rank
+        )
+        world_size = dist.get_world_size()
+        cfg.gpu_ids = range(world_size)
+        torch.cuda.set_device(local_rank)
 
-    # disable print from none-0 processes
-    if dist.get_rank() != 0:
-        import builtins
-        builtins.print = pass_print
+        # disable print from none-0 processes
+        if dist.get_rank() != 0:
+            import builtins
+            builtins.print = pass_print
+    else:
+        rank = 0
+        cfg.gpu_ids = [0]
     
     # dump configuration
-    if dist.get_rank() == 0:
+    if local_rank == 0 and rank == 0:
         os.makedirs(args.work_dir, exist_ok=True)
         cfg.dump(osp.join(args.work_dir, osp.basename(args.py_config)))
 
@@ -68,7 +72,7 @@ def main(local_rank, args):
     my_model = build_segmentor(cfg.model)
     n_parameters = sum(p.numel() for p in my_model.parameters() if p.requires_grad)
     logger.info(f'Number of params: {n_parameters}')
-    if distributed:
+    if cfg.distributed:
         find_unused_parameters = cfg.get('find_unused_parameters', False)
         ddp_model_module = torch.nn.parallel.DistributedDataParallel
         my_model = ddp_model_module(
@@ -81,21 +85,26 @@ def main(local_rank, args):
     logger.info('done ddp model')
 
     # generate datasets
-    from dataset import get_dataloader
-    train_dataset_loader, val_dataset_loader = \
-        get_dataloader(
-            train_wrapper=cfg.train_wrapper,
-            val_wrapper=cfg.val_wrapper,
-            train_loader=cfg.train_loader,
-            val_loader=cfg.val_loader,
-            dist=distributed)
+    if 'train_wrapper' in cfg:
+        from dataset import get_dataloader
+        train_dataset_loader, val_dataset_loader = \
+            get_dataloader(
+                train_wrapper=cfg.train_wrapper,
+                val_wrapper=cfg.val_wrapper,
+                train_loader=cfg.train_loader,
+                val_loader=cfg.val_loader,
+                dist=cfg.distributed)
+    elif 'data' in cfg:
+        if cfg.data.train.type == 'NuScenes3DOCP':
+            from dataset import get_dataloader_3DOCP
+            train_dataset_loader, val_dataset_loader = get_dataloader_3DOCP(cfg=cfg)
     
     # get metric calculator
-    label_str = train_dataset_loader.dataset.loader.nuScenes_label_name
-    metric_label = cfg.unique_label
-    metric_str = [label_str[x] for x in metric_label]
-    metric_ignore_label = cfg.metric_ignore_label
-    CalMeanIou_pts = MeanIoU(metric_label, metric_ignore_label, metric_str, 'pts')
+    # label_str = train_dataset_loader.dataset.loader.nuScenes_label_name
+    # metric_label = cfg.unique_label
+    # metric_str = [label_str[x] for x in metric_label]
+    # metric_ignore_label = cfg.metric_ignore_label
+    # CalMeanIou_pts = MeanIoU(metric_label, metric_ignore_label, metric_str, 'pts')
 
     # get optimizer, loss, scheduler
     optimizer = build_optimizer(my_model, cfg.optimizer)
@@ -158,7 +167,10 @@ def main(local_rank, args):
         time_s = time.time()
 
         for i_iter, inputs in enumerate(train_dataset_loader):
-            
+            if cfg.data.convert_inputs:
+                from dataset import convert_inputs
+                inputs = convert_inputs(inputs=inputs, dataset_type=cfg.data.train.type)
+                
             new_inputs = copy(inputs)
             for new_name, old_name, dtype, device in cfg.input_convertion:
                 item = inputs[old_name]
@@ -190,7 +202,7 @@ def main(local_rank, args):
             time_e = time.time()
 
             global_iter += 1
-            if i_iter % print_freq == 0 and dist.get_rank() == 0:
+            if i_iter % print_freq == 0 and local_rank == 0 and rank == 0:
                 lr = optimizer.param_groups[0]['lr']
                 logger.info('[TRAIN] Epoch %d Iter %5d/%d: Loss: %.3f (%.3f), grad_norm: %.1f, lr: %.7f, time: %.3f (%.3f)'%(
                     epoch, i_iter, len(train_dataset_loader), 
@@ -200,7 +212,7 @@ def main(local_rank, args):
             time_s = time.time()
         
         # save checkpoint
-        if dist.get_rank() == 0:
+        if local_rank == 0 and rank == 0:
             dict_to_save = {
                 'state_dict': my_model.state_dict(),
                 'optimizer': optimizer.state_dict(),
@@ -217,7 +229,7 @@ def main(local_rank, args):
         # eval
         my_model.eval()
         lossMeter.reset()
-        CalMeanIou_pts.reset()
+        # CalMeanIou_pts.reset()
 
         with torch.no_grad():
             for i_iter_val, inputs in enumerate(val_dataset_loader):
@@ -251,20 +263,20 @@ def main(local_rank, args):
                 predict_labels_pts = predict_labels_pts.detach().cpu()
                 val_pt_labs = val_pt_labs.squeeze(-1).cpu()
                 
-                for count in range(len(predict_labels_pts)):
-                    CalMeanIou_pts._after_step(predict_labels_pts[count], val_pt_labs[count])
+                # for count in range(len(predict_labels_pts)):
+                #     CalMeanIou_pts._after_step(predict_labels_pts[count], val_pt_labs[count])
                 
                 lossMeter.update(loss.detach().cpu().item())
-                if i_iter_val % print_freq == 0 and dist.get_rank() == 0:
+                if i_iter_val % print_freq == 0 and local_rank == 0 and rank == 0:
                     logger.info('[EVAL] Epoch %d Iter %5d: Loss: %.3f (%.3f)'%(
                         epoch, i_iter_val, lossMeter.val, lossMeter.avg))
         
-        val_miou_pts = CalMeanIou_pts._after_epoch()
+        # val_miou_pts = CalMeanIou_pts._after_epoch()
 
-        if best_val_miou_pts < val_miou_pts:
-            best_val_miou_pts = val_miou_pts
-        logger.info('Current val miou pts is %.3f while the best val miou pts is %.3f' %
-                (val_miou_pts, best_val_miou_pts))
+        # if best_val_miou_pts < val_miou_pts:
+        #     best_val_miou_pts = val_miou_pts
+        # logger.info('Current val miou pts is %.3f while the best val miou pts is %.3f' %
+        #         (val_miou_pts, best_val_miou_pts))
         logger.info('Current val loss is %.3f' %
                 (lossMeter.avg))
         
@@ -276,6 +288,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--py-config', default='config/tpv_lidarseg.py')
     parser.add_argument('--work-dir', type=str, default='./out/tpv_lidarseg')
+    parser.add_argument('--dist', action='store_true')
     parser.add_argument('--resume-from', type=str, default='')
 
     args = parser.parse_args()
@@ -284,4 +297,7 @@ if __name__ == '__main__':
     args.gpus = ngpus
     print(args)
 
-    torch.multiprocessing.spawn(main, args=(args,), nprocs=args.gpus)
+    if args.dist:
+        torch.multiprocessing.spawn(main, args=(args,), nprocs=args.gpus)
+    else:
+        main(0, args)
