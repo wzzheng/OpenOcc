@@ -254,4 +254,4 @@ class TPVConvEncoder(BaseEncoder):
 
         outputs = [o.permute(0, 2, 3, 1).flatten(1, 2) for o in x3d_l3]
 
-        return outputs
+        return {'representation': outputs}

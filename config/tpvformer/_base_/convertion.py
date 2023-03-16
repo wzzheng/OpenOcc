@@ -2,7 +2,7 @@
 input_convertion = [
     ['imgs', 'imgs', None, 'cuda'],
     ['points', 'grid_ind_float', 'float', 'cuda'],
-    ['point_labels', 'labels', None, 'cuda'],
+    ['point_labels', 'labels', 'long', 'cuda'],
     ['voxel_labels', 'processed_label', 'long', 'cuda'],
 ]
 

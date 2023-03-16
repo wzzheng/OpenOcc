@@ -152,8 +152,9 @@ class TPVFormerEncoder(BaseEncoder):
     def forward(
         self,         
         representation,
-        img_feats=None,
+        ms_img_feats=None,
         metas=None,
+        **kwargs
     ):
         """Forward function.
         Args:
@@ -161,6 +162,7 @@ class TPVFormerEncoder(BaseEncoder):
                 network, each is a 5D-tensor with shape
                 (B, N, C, H, W).
         """
+        img_feats = ms_img_feats
         bs = img_feats[0].shape[0]
         dtype = img_feats[0].dtype
         device = img_feats[0].device
@@ -206,5 +208,5 @@ class TPVFormerEncoder(BaseEncoder):
             img_metas=metas,
         )
         
-        return tpv_embed
+        return {'representation': tpv_embed}
 

@@ -2,22 +2,22 @@ data_path = 'data/nuscenes'
 label_mapping = "config/label_mapping/nuscenes.yaml"
 version = 'v1.0-trainval'
 
-unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-metric_ignore_label = 0
-
 pointcloudModal = dict(
+    to_voxel_args = dict(
         grid_size=[200, 200, 16],
         fill_label=0, 
         max_volume_space=[51.2, 51.2, 3], 
-        min_volume_space=[-51.2, -51.2, -5])
+        min_volume_space=[-51.2, -51.2, -5]),
+    to_depthmap_args = dict(
+        downsample=16))
 
 train_wrapper = dict(
     type='ImagePointWrapper',
     loader = dict(
         type='ImagePointLoader',
         data_path=data_path,
-        pkl_path='data/nuscenes_infos_train.pkl', 
-        label_mapping=label_mapping, 
+        pkl_path='data/nuscenes_infos_train.pkl',
+        label_mapping=label_mapping,
         nusc=None,
         version=version,
         return_img=True,
@@ -25,11 +25,19 @@ train_wrapper = dict(
     img_transforms = [
         dict(
             type='PhotoMetricDistortionMultiViewImage'),
+        # dict(
+        #     type='NormalizeMultiviewImage',
+        #     mean=[103.530, 116.280, 123.675], 
+        #     std=[1.0, 1.0, 1.0], 
+        #     to_rgb=False),
         dict(
             type='NormalizeMultiviewImage',
-            mean=[103.530, 116.280, 123.675], 
-            std=[1.0, 1.0, 1.0], 
-            to_rgb=False),
+            mean=[123.675, 116.28, 103.53], 
+            std=[58.395, 57.12, 57.375], 
+            to_rgb=True),
+        dict(
+            type='RandomScaleImageMultiViewImage',
+            scales=[0.5]),
         dict(
             type='PadMultiViewImage',
             size_divisor=32),
@@ -59,11 +67,19 @@ val_wrapper = dict(
         return_img=True,
         return_pts=True,),
     img_transforms = [
+        # dict(
+        #     type='NormalizeMultiviewImage',
+        #     mean=[103.530, 116.280, 123.675], 
+        #     std=[1.0, 1.0, 1.0], 
+        #     to_rgb=False),
         dict(
             type='NormalizeMultiviewImage',
-            mean=[103.530, 116.280, 123.675], 
-            std=[1.0, 1.0, 1.0], 
-            to_rgb=False),
+            mean=[123.675, 116.28, 103.53], 
+            std=[58.395, 57.12, 57.375], 
+            to_rgb=True),
+        dict(
+            type='RandomScaleImageMultiViewImage',
+            scales=[0.5]),
         dict(
             type='PadMultiViewImage',
             size_divisor=32),
@@ -71,6 +87,9 @@ val_wrapper = dict(
             type='DimPermute',
             permute_order=[2, 0, 1],)],
     pointcloudModal = pointcloudModal)
+
+unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+metric_ignore_label = 0
 
 train_loader = dict(
     batch_size=1,

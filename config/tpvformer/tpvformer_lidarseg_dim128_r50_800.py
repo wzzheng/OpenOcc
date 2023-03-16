@@ -10,10 +10,13 @@ label_mapping = "config/label_mapping/nuscenes.yaml"
 version = 'v1.0-trainval'
 
 pointcloudModal = dict(
+    to_voxel_args = dict(
         grid_size=[200, 200, 16],
         fill_label=0, 
         max_volume_space=[51.2, 51.2, 3], 
-        min_volume_space=[-51.2, -51.2, -5])
+        min_volume_space=[-51.2, -51.2, -5]),
+    to_depthmap_args = dict(
+        downsample=16))
 
 train_wrapper = dict(
     type='ImagePointWrapper',

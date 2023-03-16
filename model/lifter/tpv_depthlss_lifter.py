@@ -1,5 +1,6 @@
 # Modified from BEVDepth
 import torch.nn.functional as F
+import numpy as np
 from mmcv.cnn import build_conv_layer
 from mmseg.models.backbones.resnet import BasicBlock
 from torch import nn, torch
@@ -14,7 +15,7 @@ try:
 except ImportError:
     print('Import VoxelPooling fail.')
 
-__all__ = ['BaseLSSFPN']
+__all__ = ['TPVDepthLSSLifter']
 
 
 class _ASPPModule(nn.Module):
@@ -168,6 +169,9 @@ class DepthNet(nn.Module):
 
     def __init__(self, in_channels, mid_channels, context_channels, depth_channels):
         super(DepthNet, self).__init__()
+        
+        meta_channels = 16
+
         self.reduce_conv = nn.Sequential(
             nn.Conv2d(in_channels,
                       mid_channels,
@@ -182,10 +186,10 @@ class DepthNet(nn.Module):
                                       kernel_size=1,
                                       stride=1,
                                       padding=0)
-        self.bn = nn.BatchNorm1d(27)
-        self.depth_mlp = Mlp(27, mid_channels, mid_channels)
+        self.bn = nn.BatchNorm1d(meta_channels)
+        self.depth_mlp = Mlp(meta_channels, mid_channels, mid_channels)
         self.depth_se = SELayer(mid_channels)  # NOTE: add camera-aware
-        self.context_mlp = Mlp(27, mid_channels, mid_channels)
+        self.context_mlp = Mlp(meta_channels, mid_channels, mid_channels)
         self.context_se = SELayer(mid_channels)  # NOTE: add camera-aware
         self.depth_conv = nn.Sequential(
             BasicBlock(mid_channels, mid_channels),
@@ -209,37 +213,37 @@ class DepthNet(nn.Module):
         )
 
     def forward(self, x, mats_dict):
-        intrins = mats_dict['intrin_mats'][:, 0:1, ..., :3, :3]
+        intrins = mats_dict['intrinsic'][:, :, :3, :3]
         batch_size = intrins.shape[0]
-        num_cams = intrins.shape[2]
-        ida = mats_dict['ida_mats'][:, 0:1, ...]
-        sensor2ego = mats_dict['sensor2ego_mats'][:, 0:1, ..., :3, :]
-        bda = mats_dict['bda_mat'].view(batch_size, 1, 1, 4,
-                                        4).repeat(1, 1, num_cams, 1, 1)
+        num_cams = intrins.shape[1]
+        # ida = mats_dict['ida_mats'][:, 0:1, ...]
+        sensor2ego = mats_dict['cam2lidar'][:, :, :3, :]
+        # bda = mats_dict['bda_mat'].view(batch_size, 1, 1, 4,
+                                        # 4).repeat(1, 1, num_cams, 1, 1)
         
         mlp_input = torch.cat(
             [
                 torch.stack(
                     [
-                        intrins[:, 0:1, ..., 0, 0],
-                        intrins[:, 0:1, ..., 1, 1],
-                        intrins[:, 0:1, ..., 0, 2],
-                        intrins[:, 0:1, ..., 1, 2],
-                        ida[:, 0:1, ..., 0, 0],
-                        ida[:, 0:1, ..., 0, 1],
-                        ida[:, 0:1, ..., 0, 3],
-                        ida[:, 0:1, ..., 1, 0],
-                        ida[:, 0:1, ..., 1, 1],
-                        ida[:, 0:1, ..., 1, 3],
-                        bda[:, 0:1, ..., 0, 0],
-                        bda[:, 0:1, ..., 0, 1],
-                        bda[:, 0:1, ..., 1, 0],
-                        bda[:, 0:1, ..., 1, 1],
-                        bda[:, 0:1, ..., 2, 2],
+                        intrins[:, ..., 0, 0],
+                        intrins[:, ..., 1, 1],
+                        intrins[:, ..., 0, 2],
+                        intrins[:, ..., 1, 2],
+                        # ida[:, 0:1, ..., 0, 0],
+                        # ida[:, 0:1, ..., 0, 1],
+                        # ida[:, 0:1, ..., 0, 3],
+                        # ida[:, 0:1, ..., 1, 0],
+                        # ida[:, 0:1, ..., 1, 1],
+                        # ida[:, 0:1, ..., 1, 3],
+                        # bda[:, 0:1, ..., 0, 0],
+                        # bda[:, 0:1, ..., 0, 1],
+                        # bda[:, 0:1, ..., 1, 0],
+                        # bda[:, 0:1, ..., 1, 1],
+                        # bda[:, 0:1, ..., 2, 2],
                     ],
                     dim=-1,
                 ),
-                sensor2ego.view(batch_size, 1, num_cams, -1),
+                sensor2ego.view(batch_size, num_cams, -1),
             ],
             -1,
         )
@@ -432,7 +436,8 @@ class TPVDepthLSSLifter(BaseLifter):
 
         # undo post-transformation
         # B x N x D x H x W x 3
-        points = self.frustum.unsqueeze(-1)
+        points = self.frustum.unsqueeze(-1).unsqueeze(0).unsqueeze(0)
+        print(points.shape)
         if ida_mat is not None:
             ida_mat = ida_mat.view(batch_size, num_cams, 1, 1, 1, 4, 4)
             points = ida_mat.inverse().matmul(points)
@@ -531,11 +536,11 @@ class TPVDepthLSSLifter(BaseLifter):
             tpv_zh = voxel_pooling_train(
                 geom_xyz[..., [1, 2, 0]],
                 img_feat_with_depth.contiguous(),
-                voxel_num_cuda[1, 2, 0])
+                voxel_num_cuda[[1, 2, 0]])
             tpv_wz = voxel_pooling_train(
                 geom_xyz[..., [2, 0, 1]],
                 img_feat_with_depth.contiguous(),
-                voxel_num_cuda[2, 0, 1])
+                voxel_num_cuda[[2, 0, 1]])
             
         else:
             voxel_num_cuda = self.voxel_num.cuda()
@@ -550,13 +555,13 @@ class TPVDepthLSSLifter(BaseLifter):
                 depth, 
                 depth_feature[:, self.depth_channels:(
                     self.depth_channels + self.output_channels)].contiguous(),
-                voxel_num_cuda[1, 2, 0])
+                voxel_num_cuda[[1, 2, 0]])
             tpv_wz = voxel_pooling_inference(
                 geom_xyz[..., [2, 0, 1]], 
                 depth, 
                 depth_feature[:, self.depth_channels:(
                     self.depth_channels + self.output_channels)].contiguous(),
-                voxel_num_cuda[2, 0, 1])
+                voxel_num_cuda[[2, 0, 1]])
         tpv = (tpv_hw, tpv_zh, tpv_wz)
 
         if is_return_depth:
@@ -564,12 +569,25 @@ class TPVDepthLSSLifter(BaseLifter):
             # loss will colapse during the traing process.
             return tpv, depth_feature[:, :self.depth_channels].softmax(dim=1)
         return tpv
+    
+    def rearrange_metas(self, metas, dtype, device):
+        cam2lidars = []
+        intrinsics = []
+        for meta in metas:
+            cam2lidars.append(meta['cam2lidar'])
+            intrinsics.append(meta['intrinsic'])
+        
+        cam2lidars = torch.from_numpy(np.stack(cam2lidars)).to(device=device, dtype=dtype)
+        intrinsics = torch.from_numpy(np.stack(intrinsics)).to(device=device, dtype=dtype)
+
+        return {'cam2lidar': cam2lidars, 'intrinsic': intrinsics}
 
     def forward(self,
                 ms_img_feats,
                 metas,
                 timestamps=None,
-                is_return_depth=False):
+                is_return_depth=True,
+                **kwargs):
         """Forward function.
 
         Args:
@@ -594,6 +612,7 @@ class TPVDepthLSSLifter(BaseLifter):
         Return:
             Tensor: bev feature map.
         """
+        metas = self.rearrange_metas(metas, ms_img_feats[0].dtype, ms_img_feats[0].device)
         num_sweeps = 1
         # num_sweeps = ms_img_feats[0].shape[1]
         # batch_size, num_cams, num_channels, img_height, \
@@ -602,25 +621,30 @@ class TPVDepthLSSLifter(BaseLifter):
         key_frame_res = self._forward_single_sweep(
             0,
             ms_img_feats[0].unsqueeze(1),
-            metas[0],
+            metas,
             is_return_depth=is_return_depth)
+        assert num_sweeps == 1
         if num_sweeps == 1:
-            return key_frame_res
+            if is_return_depth:
+                outs = {'representation': key_frame_res[0], 'depth_pred': key_frame_res[1]}
+            else:
+                outs = {'representation': key_frame_res[0]}
+            return outs
 
-        key_frame_feature = key_frame_res[
-            0] if is_return_depth else key_frame_res
+        # key_frame_feature = key_frame_res[
+        #     0] if is_return_depth else key_frame_res
 
-        ret_feature_list = [key_frame_feature]
-        for sweep_index in range(1, num_sweeps):
-            with torch.no_grad():
-                feature_map = self._forward_single_sweep(
-                    sweep_index,
-                    ms_img_feats[0][:, sweep_index:sweep_index + 1, ...],
-                    metas[sweep_index],
-                    is_return_depth=False)
-                ret_feature_list.append(feature_map)
+        # ret_feature_list = [key_frame_feature]
+        # for sweep_index in range(1, num_sweeps):
+        #     with torch.no_grad():
+        #         feature_map = self._forward_single_sweep(
+        #             sweep_index,
+        #             ms_img_feats[0][:, sweep_index:sweep_index + 1, ...],
+        #             metas[sweep_index],
+        #             is_return_depth=False)
+        #         ret_feature_list.append(feature_map)
 
-        if is_return_depth:
-            return torch.cat(ret_feature_list, 1), key_frame_res[1]
-        else:
-            return torch.cat(ret_feature_list, 1)
+        # if is_return_depth:
+        #     return torch.cat(ret_feature_list, 1), key_frame_res[1]
+        # else:
+        #     return torch.cat(ret_feature_list, 1)

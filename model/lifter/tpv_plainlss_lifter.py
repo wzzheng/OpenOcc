@@ -98,7 +98,7 @@ class TPVPlainLSSLifter(BaseLifter):
         return reference_points_cam, tpv_mask
 
     @auto_fp16(apply_to=('ms_img_feats'))
-    def forward(self, ms_img_feats, metas):
+    def forward(self, ms_img_feats, metas, **kwargs):
         # upsample feature maps to the same resolution
         B, N, C, H, W = ms_img_feats[0].shape
         upsampled = [ms_img_feats[0]]
@@ -157,6 +157,6 @@ class TPVPlainLSSLifter(BaseLifter):
         tpv_zh = tpv_zh.permute(0, 2, 3, 1).flatten(1, 2)
         tpv_wz = tpv_wz.permute(0, 2, 3, 1).flatten(1, 2)
 
-        outs = (tpv_hw, tpv_zh, tpv_wz)
+        outs = {'representation': (tpv_hw, tpv_zh, tpv_wz)}
         return outs
 

@@ -4,6 +4,44 @@ _base_ = [
     './_base_/schedule.py',
     './_base_/convertion.py'
 ]
+# ================ loss ======================
+ignore_label = 0
+dbound = [2.0, 58.0, 0.5]
+
+loss = dict(
+    type='MultiLoss',
+    loss_cfgs=[
+        dict(
+            type='CELoss',
+            weight=1.0,
+            ignore_index=ignore_label,),
+        dict(
+            type='LovaszSoftmaxLoss',
+            weight=1.0,
+            ignore=ignore_label),
+        dict(
+            type='DepthLoss',
+            weight=3.0,
+            downsample_factor=16,
+            dbound=dbound),])
+
+# ================== convertion ======================
+input_convertion = [
+    ['imgs', 'imgs', None, 'cuda'],
+    ['points', 'grid_ind_float', 'float', 'cuda'],
+    ['point_labels', 'labels', 'long', 'cuda'],
+    ['voxel_labels', 'processed_label', 'long', 'cuda'],
+    ['depth_target', 'depth_target', None, 'cuda']
+]
+
+loss_inputs = dict(
+    ce_input='outputs_vox',
+    ce_target='voxel_labels',
+    lovasz_softmax_input='outputs_pts',
+    lovasz_softmax_target='point_labels',
+    depth_input='depth_pred',
+    depth_target='depth_target'
+)
 
 max_num_epochs = 12
 load_from = './ckpts/resnet50-0676ba61.pth'
@@ -24,15 +62,6 @@ syncBN = True
 # ============= MODEL ===============
 model = dict(
     type='TPVSegmentor',
-    # img_backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(1,2,3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch',),
     img_backbone=dict(
         type='ResNet',
         depth=50,
@@ -46,20 +75,18 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=[_dim_per_scale_] * 4,
         upsample_strides=[0.5, 1, 2, 4],
-        # type='FPN',
-        # in_channels=[512, 1024, 2048],
-        # out_channels=_dim_,
-        # start_level=0,
-        # add_extra_convs='on_output',
-        # num_outs=4,
-        # relu_before_extra_convs=True
     ),
     lifter=dict(
-        type='TPVPlainLSSLifter',
-        tpv_h=tpv_h_,
-        tpv_w=tpv_w_,
-        tpv_z=tpv_z_,
-        pc_range=point_cloud_range,),
+        type='TPVDepthLSSLifter',
+        x_bound=[-51.2, 51.2, 0.512],
+        y_bound=[-51.2, 51.2, 0.512],
+        z_bound=[-5, 3, 0.5],
+        d_bound=dbound,
+        final_dim=[480, 800],
+        downsample_factor=16,
+        output_channels=_dim_,
+        depth_net_conf=dict(in_channels=_dim_, mid_channels=_dim_),
+        use_da=False),
     encoder=dict(
         type='TPVConvEncoder',
         tpv_h=tpv_h_,
