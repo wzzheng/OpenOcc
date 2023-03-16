@@ -70,6 +70,8 @@ def main(local_rank, args):
 
     # build model
     my_model = build_segmentor(cfg.model)
+    if cfg.get('syncBN', False):
+        nn.SyncBatchNorm.convert_sync_batchnorm(my_model)
     n_parameters = sum(p.numel() for p in my_model.parameters() if p.requires_grad)
     logger.info(f'Number of params: {n_parameters}')
     if cfg.distributed:

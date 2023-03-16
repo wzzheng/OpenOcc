@@ -12,7 +12,6 @@ def custom_collate_fn(data):
 
     for item_name, item in data[0].items():
 
-    # for i in range(num_items):
         obj = get_object(item)
         if isinstance(obj, np.ndarray):
             data_dict.update(

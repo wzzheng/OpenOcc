@@ -61,6 +61,9 @@ class ImagePointLoader(BaseLoader):
 
         image_paths = []
         lidar2img_rts = []
+        # img2lidar_rts = []
+        cam2lidar_rts = []
+        intrinsics = []
         for cam_type, cam_info in info['cams'].items():
             image_paths.append(cam_info['data_path'])
             # obtain lidar to image transformation matrix
@@ -69,15 +72,21 @@ class ImagePointLoader(BaseLoader):
             lidar2cam_rt = np.eye(4)
             lidar2cam_rt[:3, :3] = lidar2cam_r.T
             lidar2cam_rt[3, :3] = -lidar2cam_t
+            cam2lidar_rts.append(np.linalg.inv(lidar2cam_rt.T))
             intrinsic = cam_info['cam_intrinsic']
             viewpad = np.eye(4)
             viewpad[:intrinsic.shape[0], :intrinsic.shape[1]] = intrinsic
             lidar2img_rt = (viewpad @ lidar2cam_rt.T)
             lidar2img_rts.append(lidar2img_rt)
+            # img2lidar_rts.append(np.linalg.inv(lidar2img_rt))
+            intrinsics.append(viewpad)
 
         input_dict.update(dict(
             img_filename=image_paths,
-            lidar2img=lidar2img_rts,))
+            lidar2img=lidar2img_rts,
+            # img2lidar=img2lidar_rts,
+            cam2lidar=cam2lidar_rts,
+            intrinsic=intrinsics))
         return input_dict
 
     def get_nuScenes_label_name(self, nuScenesyaml):

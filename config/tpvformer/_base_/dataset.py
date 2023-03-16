@@ -6,10 +6,13 @@ unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 metric_ignore_label = 0
 
 pointcloudModal = dict(
+    to_voxel_args = dict(
         grid_size=[200, 200, 16],
         fill_label=0, 
         max_volume_space=[51.2, 51.2, 3], 
-        min_volume_space=[-51.2, -51.2, -5])
+        min_volume_space=[-51.2, -51.2, -5]),
+    to_depthmap_args = dict(
+        downsample=16))
 
 train_wrapper = dict(
     type='ImagePointWrapper',

@@ -44,7 +44,7 @@ class TPVHead(BaseSegmentor):
         self.classifier = nn.Linear(out_dims, nbr_classes)
         self.classes = nbr_classes
     
-    def forward(self, representation, points=None):
+    def forward(self, representation, points=None, **kwargs):
         """
         representation contains:
             tpv_list[0]: bs, h*w, c

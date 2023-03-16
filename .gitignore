@@ -133,4 +133,5 @@ dmypy.json
 ckpts/
 data/
 out/
+debug.py
 work_dir/
