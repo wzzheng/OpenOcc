@@ -11,13 +11,19 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
   We design our pipeline to be easily composable and extendable. Feel free to explore other combinations like TPVDepth, VoxelDepth, or TPVFusion with simple modifications. :wink:
 
+# Demo
+
+![demo](./assets/demo.gif)
+
+![legend](./assets/legend.png)
+
 # Method
 
 ## Dataset 
 
 | Status             | Name | Description                                                  |
 | ------------------ | ---- | ------------------------------------------------------------ |
-| :white_check_mark: |      | [nuScenes LiDAR Segmentation](https://www.nuscenes.org/lidar-segmentation) |
+| :white_check_mark: | ImagePointWrapper | [nuScenes LiDAR Segmentation](https://www.nuscenes.org/lidar-segmentation) |
 | :o:                |      | [SurroundOcc](https://github.com/weiyithu/SurroundOcc)       |
 | :o:                |      | [OpenOccupancy](https://github.com/JeffWang987/OpenOccupancy) |
 | :o:                |      | [3D Occupancy Prediction Challenge](https://github.com/CVPR2023-3D-Occupancy-Prediction/CVPR2023-3D-Occupancy-Prediction) |
@@ -26,7 +32,7 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
 | Status             | Name | 3D Scene Representation | Description                                            |
 | ------------------ | ---- | ----------------------- | ------------------------------------------------------ |
-| :white_check_mark: |      | TPV                     | Use deformable cross-attention to update TPV queries   |
+| :white_check_mark: | TPVQueryLifter | TPV                     | Use deformable cross-attention to update TPV queries   |
 | :o:                |      | BEV                     | Use deformable cross-attention to update BEV queries   |
 | :o:                |      | Voxel                   | Use deformable cross-attention to update Voxel queries |
 
@@ -34,7 +40,7 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
 | Status             | Name | Description                              |
 | ------------------ | ---- | ---------------------------------------- |
-| :white_check_mark: |      | Use self-attention to aggregate features |
+| :white_check_mark: | TPVFormerEncoder | Use self-attention to aggregate features |
 | :o:                |      | Use 2D convolution to aggregate features |
 | :o:                |      | Use 3D convolution to aggregate features |
 
@@ -42,13 +48,13 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
 | Status             | Name | Description                           |
 | ------------------ | ---- | ------------------------------------- |
-| :white_check_mark: |      | Cross-entropy loss                    |
-| :white_check_mark: |      | [Lovasz-softmax loss](Lovasz-softmax) |
+| :white_check_mark: | CELoss | Cross-entropy loss                    |
+| :white_check_mark: | LovaszSoftmaxLoss | [Lovasz-softmax loss](Lovasz-softmax) |
 
 ## How to use
 
-[installation](docs/installation.md)
+[Installation](docs/installation.md)
 
-[prepare_dataset](docs/prepare_dataset.md)
+[Prepare dataset](docs/prepare_dataset.md)
 
-[getting_started](docs/get_started.md)
+[Getting started](docs/get_started.md)

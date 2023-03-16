@@ -437,7 +437,6 @@ class TPVDepthLSSLifter(BaseLifter):
         # undo post-transformation
         # B x N x D x H x W x 3
         points = self.frustum.unsqueeze(-1).unsqueeze(0).unsqueeze(0)
-        print(points.shape)
         if ida_mat is not None:
             ida_mat = ida_mat.view(batch_size, num_cams, 1, 1, 1, 4, 4)
             points = ida_mat.inverse().matmul(points)

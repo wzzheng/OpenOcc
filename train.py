@@ -151,60 +151,6 @@ def main(local_rank, args):
     max_num_epochs = cfg.max_num_epochs
     lossMeter = AverageMeter()
 
-    # eval
-    my_model.eval()
-    lossMeter.reset()
-    CalMeanIou_pts.reset()
-
-    with torch.no_grad():
-        for i_iter_val, inputs in enumerate(val_dataset_loader):
-
-            new_inputs = copy(inputs)
-            for new_name, old_name, dtype, device in cfg.input_convertion:
-                item = inputs[old_name]
-                if dtype is not None:
-                    item = item.to(dtypeLut[dtype])
-                if device is not None:
-                    item = item.to(device)
-                new_inputs.update({new_name: item})
-            data_time_e = time.time()
-            
-            # forward + backward + optimize
-            model_inputs = {}
-            for model_arg_name, input_name in cfg.model_inputs.items():
-                model_inputs.update({model_arg_name: new_inputs[input_name]})
-            model_outputs = my_model(**model_inputs)
-            new_inputs.update(model_outputs)
-            
-            loss_inputs = {}
-            for loss_arg_name, input_name in cfg.loss_inputs.items():
-                loss_inputs.update({loss_arg_name: new_inputs[input_name]})
-            loss, _ = multi_loss_func(loss_inputs)
-
-            predict_labels_pts = new_inputs['outputs_pts']
-            val_pt_labs = new_inputs['point_labels']
-            predict_labels_pts = predict_labels_pts.squeeze(-1).squeeze(-1)
-            predict_labels_pts = torch.argmax(predict_labels_pts, dim=1) # bs, n
-            predict_labels_pts = predict_labels_pts.detach().cpu()
-            val_pt_labs = val_pt_labs.squeeze(-1).cpu()
-            
-            for count in range(len(predict_labels_pts)):
-                CalMeanIou_pts._after_step(predict_labels_pts[count], val_pt_labs[count])
-            
-            lossMeter.update(loss.detach().cpu().item())
-            if i_iter_val % print_freq == 0 and dist.get_rank() == 0:
-                logger.info('[EVAL] Epoch %d Iter %5d: Loss: %.3f (%.3f)'%(
-                    epoch, i_iter_val, lossMeter.val, lossMeter.avg))
-    
-    val_miou_pts = CalMeanIou_pts._after_epoch()
-
-    if best_val_miou_pts < val_miou_pts:
-        best_val_miou_pts = val_miou_pts
-    logger.info('Current val miou pts is %.3f while the best val miou pts is %.3f' %
-            (val_miou_pts, best_val_miou_pts))
-    logger.info('Current val loss is %.3f' %
-            (lossMeter.avg))
-
     while epoch < max_num_epochs:
         my_model.train()
         if hasattr(train_dataset_loader.sampler, 'set_epoch'):

@@ -46,7 +46,7 @@ loss_inputs = dict(
 max_num_epochs = 12
 load_from = './ckpts/resnet50-0676ba61.pth'
 
-_dim_ = 384
+_dim_ = 256
 _dim_per_scale_ = 96
 tpv_h_ = 200
 tpv_w_ = 200
@@ -74,7 +74,7 @@ model = dict(
         type='SECONDFPN',
         in_channels=[256, 512, 1024, 2048],
         out_channels=[_dim_per_scale_] * 4,
-        upsample_strides=[0.5, 1, 2, 4],
+        upsample_strides=[0.25, 0.5, 1, 2],
     ),
     lifter=dict(
         type='TPVDepthLSSLifter',
@@ -85,7 +85,7 @@ model = dict(
         final_dim=[480, 800],
         downsample_factor=16,
         output_channels=_dim_,
-        depth_net_conf=dict(in_channels=_dim_, mid_channels=_dim_),
+        depth_net_conf=dict(in_channels=_dim_per_scale_*4, mid_channels=_dim_),
         use_da=False),
     encoder=dict(
         type='TPVConvEncoder',
