@@ -24,6 +24,22 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
 ## 2D-3D Lifter
 
+### Image2Voxel
+
+| Status             | Name  | Description                                            |
+| ------------------ | ---- |  ------------------------------------------------------ |
+| :white_check_mark: |                           | Use estimated depth distribution to lift image features to the voxel space (LSS). |
+| :white_check_mark: |                         | Uniformly put image features on the corresponding ray (MonoScene). |
+
+### Voxel2Rep
+
+| Status             | Name | Description                             |
+| ------------------ | ---- | --------------------------------------- |
+| :white_check_mark: |      | Perform pooling to obtain TPV features. |
+| :white_check_mark: |      | Perform pooling to obtain BEV features. |
+
+### Image2Rep
+
 | Status             | Name | 3D Scene Representation | Description                                            |
 | ------------------ | ---- | ----------------------- | ------------------------------------------------------ |
 | :white_check_mark: |      | TPV                     | Use deformable cross-attention to update TPV queries   |
@@ -35,7 +51,7 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 | Status             | Name | Description                              |
 | ------------------ | ---- | ---------------------------------------- |
 | :white_check_mark: |      | Use self-attention to aggregate features |
-| :o:                |      | Use 2D convolution to aggregate features |
+| :white_check_mark: |      | Use 2D convolution to aggregate features |
 | :o:                |      | Use 3D convolution to aggregate features |
 
 ## Loss
