@@ -34,14 +34,14 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
 | Status             | Name  | Description                                            |
 | ------------------ | ---- |  ------------------------------------------------------ |
-| :white_check_mark: |                           | Use estimated depth distribution to lift image features to the voxel space (LSS). |
-| :white_check_mark: |                         | Uniformly put image features on the corresponding ray (MonoScene). |
+| :white_check_mark: | TPVDepthLSSLifter | Use estimated depth distribution to lift image features to the voxel space (LSS). |
+| :white_check_mark: | TPVPlainLSSLifter | Uniformly put image features on the corresponding ray (MonoScene). |
 
 ### Voxel2Rep
 
 | Status             | Name | Description                             |
 | ------------------ | ---- | --------------------------------------- |
-| :white_check_mark: |      | Perform pooling to obtain TPV features. |
+| :white_check_mark: | TPVDepthLSSLifter, TPVPlainLSSLifter | Perform pooling to obtain TPV features. |
 | :white_check_mark: |      | Perform pooling to obtain BEV features. |
 
 ### Image2Rep
@@ -135,17 +135,9 @@ bash launcher.sh config/tpvformer/tpvformer_lidarseg_dim128_r50_800.py out/tpvfo
 bash launcher.sh config/tpvconv/tpvconv_lidarseg_dim384_r50_800_layer10.py out/tpvconv_lidarseg_dim384_r50_800_layer10
 ```
 
-<<<<<<< HEAD
-[Installation](docs/installation.md)
-
-[Prepare dataset](docs/prepare_dataset.md)
-
-[Getting started](docs/get_started.md)
-=======
 3. Train TPVConv with DepthLSSLifter for lidar segmentation task.
 
 ```
 bash launcher.sh config/tpvconv/tpvconv_lidarseg_dim384_r50_800_layer10_depthlss.py out/tpvconv_lidarseg_dim384_r50_800_layer10_depthlss
 ```
 
->>>>>>> 46bb70043997034e841f257f43e7a5567dd1456d
