@@ -19,6 +19,10 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 
 # Method
 
+## Pipeline
+
+![pipeline](./assets/pipeline.PNG)
+
 ## Dataset 
 
 | Status             | Name | Description                                                  |
@@ -42,7 +46,7 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 | Status             | Name | Description                             |
 | ------------------ | ---- | --------------------------------------- |
 | :white_check_mark: | TPVDepthLSSLifter, TPVPlainLSSLifter | Perform pooling to obtain TPV features. |
-| :white_check_mark: |      | Perform pooling to obtain BEV features. |
+| :o: |      | Perform pooling to obtain BEV features. |
 
 ### Image2Rep
 
