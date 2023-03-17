@@ -29,8 +29,8 @@ OpenOcc is an open source 3D occupancy prediction codebase implemented with PyTo
 | ------------------ | ---- | ------------------------------------------------------------ |
 | :white_check_mark: | ImagePointWrapper | [nuScenes LiDAR Segmentation](https://www.nuscenes.org/lidar-segmentation) |
 | :o:                |      | [SurroundOcc](https://github.com/weiyithu/SurroundOcc)       |
-| :o:                |      | [OpenOccupancy](https://github.com/JeffWang987/OpenOccupancy) |
-| :white_check_mark: |   NuScenes3DOCP   | [3D Occupancy Prediction Challenge](https://github.com/CVPR2023-3D-Occupancy-Prediction/CVPR2023-3D-Occupancy-Prediction) |
+| :white_check_mark: |   NuScenes3DOcc   | [OpenOccupancy](https://github.com/JeffWang987/OpenOccupancy) |
+| :white_check_mark: |   NuScenes3DOPC   | [3D Occupancy Prediction Challenge](https://github.com/CVPR2023-3D-Occupancy-Prediction/CVPR2023-3D-Occupancy-Prediction) |
 
 ## 2D-3D Lifter
 
