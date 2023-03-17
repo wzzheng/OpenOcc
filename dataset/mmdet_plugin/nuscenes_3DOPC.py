@@ -17,7 +17,7 @@ from .occ_metrics import Metric_mIoU, Metric_FScore
 
 
 @DATASETS.register_module()
-class NuScenes3DOCP(NuScenesDataset):
+class NuScenes3DOPC(NuScenesDataset):
     r"""NuScenes Dataset.
 
     This datset only add camera intrinsics and extrinsics to the results.
@@ -127,7 +127,6 @@ class NuScenes3DOCP(NuScenesDataset):
                     cam_intrinsic=cam_intrinsics,
                     lidar2cam=lidar2cam_rts,
                     cam2lidar=cam2lidar_rts,
-                    intrinsic=cam_intrinsics,
                 ))
 
         if not self.test_mode:

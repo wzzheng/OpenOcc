@@ -17,7 +17,7 @@ from .samplers.distributed_sampler import DistributedSampler
 from .samplers.sampler import build_sampler
 
 
-def build_dataloader_3DOCP(dataset,
+def build_dataloader_occ(dataset,
                      samples_per_gpu,
                      workers_per_gpu,
                      num_gpus=1,

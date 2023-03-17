@@ -97,9 +97,9 @@ def main(local_rank, args):
                 val_loader=cfg.val_loader,
                 dist=cfg.distributed)
     elif 'data' in cfg:
-        if cfg.data.train.type == 'NuScenes3DOCP':
-            from dataset import get_dataloader_3DOCP
-            train_dataset_loader, val_dataset_loader = get_dataloader_3DOCP(cfg=cfg)
+        # for mmdet_plugin nuscenes_occ dataset
+        from dataset import get_dataloader_occ
+        train_dataset_loader, val_dataset_loader = get_dataloader_occ(cfg=cfg)
     
     # get metric calculator
     # label_str = train_dataset_loader.dataset.loader.nuScenes_label_name
@@ -181,6 +181,7 @@ def main(local_rank, args):
                 if device is not None:
                     item = item.to(device)
                 new_inputs.update({new_name: item})
+                new_inputs.pop(old_name)
             data_time_e = time.time()
             
             # forward + backward + optimize

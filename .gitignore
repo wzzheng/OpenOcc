@@ -135,3 +135,4 @@ data/
 out/
 debug.py
 work_dir/
+debug.sh

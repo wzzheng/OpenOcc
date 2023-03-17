@@ -34,12 +34,12 @@ hybrid_attn_points = 32
 hybrid_attn_init = 0
 
 grid_size = [tpv_h_*scale_h, tpv_w_*scale_w, tpv_z_*scale_z]
-nbr_class = 18
+nbr_class = 17
 
 input_convertion = [
-    ['img', 'imgs', None, 'cuda'],
-    ['img_metas', 'metas', None, None],
-    ['voxel_semantics', 'processed_label', 'long', 'cuda'],
+    ['imgs', 'img', None, 'cuda'],
+    ['metas', 'img_metas', None, None],
+    ['processed_label', 'voxel_semantics', 'long', 'cuda'],
 ]
 
 model_inputs = dict(
@@ -88,7 +88,7 @@ test_pipeline = [
                 type='DefaultFormatBundle3D',
                 class_names=class_names,
                 with_label=False),
-            dict(type='CustomCollect3D', keys=['img'])
+            dict(type='CustomCollect3D', keys=['img', 'voxel_semantics',])
         ])
 ]
 
@@ -197,24 +197,34 @@ self_layer = dict(
 tpv_encoder_layers = [
     self_cross_layer, 
     self_cross_layer,
-    self_cross_layer,   
+    self_cross_layer,
+    self_layer,
+    self_layer,
 ]
 
 model = dict(
-    type='TPVFormer',
+    type='TPVSegmentor',
+    # img_backbone=dict(
+    #     type='ResNet',
+    #     depth=50,
+    #     num_stages=4,
+    #     out_indices=(1,2,3),
+    #     frozen_stages=1,
+    #     norm_cfg=dict(type='BN', requires_grad=True),
+    #     norm_eval=True,
+    #     style='pytorch',
+    #     ),
     img_backbone=dict(
         type='ResNet',
         depth=50,
         num_stages=4,
-        out_indices=(1,2,3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        norm_eval=True,
-        style='pytorch',
-        ),
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=0,
+        norm_eval=False,
+        style='pytorch',),
     img_neck=dict(
         type='FPN',
-        in_channels=[512, 1024, 2048],
+        in_channels=[256, 512, 1024, 2048],
         out_channels=_dim_,
         start_level=0,
         add_extra_convs='on_output',
