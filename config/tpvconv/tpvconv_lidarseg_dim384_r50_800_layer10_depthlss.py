@@ -21,7 +21,7 @@ loss = dict(
             ignore=ignore_label),
         dict(
             type='DepthLoss',
-            weight=3.0,
+            weight=1.0,
             downsample_factor=16,
             dbound=dbound),])
 

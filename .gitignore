@@ -136,3 +136,5 @@ out/
 debug.py
 work_dir/
 debug.sh
+eval.py
+todo.md

@@ -7,10 +7,10 @@ def revise_ckpt(state_dict):
         state_dict = OrderedDict(
             {('img_backbone.' + k): v
                 for k, v in state_dict.items()})
-    if not tmp_k.startswith('module.'):
-        state_dict = OrderedDict(
-            {('module.' + k): v
-                for k, v in state_dict.items()})
+    # if not tmp_k.startswith('module.'):
+    #     state_dict = OrderedDict(
+    #         {('module.' + k): v
+    #             for k, v in state_dict.items()})
     return state_dict
 
 
