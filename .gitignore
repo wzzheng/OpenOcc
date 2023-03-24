@@ -138,3 +138,6 @@ work_dir/
 debug.sh
 eval.py
 todo.md
+di*.png
+dt*.png
+img*.png

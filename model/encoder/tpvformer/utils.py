@@ -146,11 +146,36 @@ def point_sampling(reference_points, pc_range, img_metas):
     reference_points_cam = torch.matmul(
         lidar2img.to(torch.float32),
         reference_points.to(torch.float32)).squeeze(-1)
+    
     eps = 1e-5
+    
+    if 'post_rots' in img_metas[0]:
+        post_rots = []
+        post_trans = []
+        for img_meta in img_metas:
+            post_rots.append(img_meta['post_rots'])
+            post_trans.append(img_meta['post_trans'])
+        post_rots = np.asarray(post_rots)
+        post_trans = np.asarray(post_trans)
+        post_rots = reference_points.new_tensor(post_rots)
+        post_trans = reference_points.new_tensor(post_trans)
+
+        reference_points_cam[..., :2] = reference_points_cam[..., :2] / torch.maximum(
+            reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
+        
+        # D, B, N, Q, 3, 1
+        reference_points_cam = reference_points_cam[..., :3].unsqueeze(-1)
+        post_rots = post_rots.view(1, B, num_cam, 1, 3, 3)
+        reference_points_cam = torch.matmul(
+            post_rots.to(torch.float32),
+            reference_points_cam.to(torch.float32)).squeeze(-1)
+        # D, B, N, Q, 3
+        post_trans = post_trans.view(1, B, num_cam, 1, 3)
+        reference_points_cam = reference_points_cam + post_trans
 
     tpv_mask = (reference_points_cam[..., 2:3] > eps)
-    reference_points_cam = reference_points_cam[..., 0:2] / torch.maximum(
-        reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
+    # reference_points_cam = reference_points_cam[..., 0:2] / torch.maximum(
+    #     reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
     
     reference_points_cam[..., 0] /= img_metas[0]['img_shape'][0][1]
     reference_points_cam[..., 1] /= img_metas[0]['img_shape'][0][0]
