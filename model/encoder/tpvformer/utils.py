@@ -149,7 +149,10 @@ def point_sampling(reference_points, pc_range, img_metas):
     
     eps = 1e-5
     
-    if 'post_rots' in img_metas[0]:
+    if 'img_augmentation' in img_metas[0] and \
+        'post_rots' in img_metas[0]['img_augmentation'] and \
+        img_metas[0]['img_augmentation']['post_rots']:
+    # if 'post_rots' in img_metas[0]:
         post_rots = []
         post_trans = []
         for img_meta in img_metas:
