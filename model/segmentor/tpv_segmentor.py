@@ -16,7 +16,7 @@ class TPVSegmentor(CustomBaseSegmentor):
 
         self.fp16_enabled = False
 
-    @auto_fp16(apply_to=('img', 'points'))
+    @auto_fp16(apply_to=('imgs', 'points'))
     def forward(self,
                 imgs=None,
                 metas=None,

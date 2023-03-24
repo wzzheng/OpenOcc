@@ -52,7 +52,7 @@ def convert_inputs(inputs, dataset_type):
             else:
                 results[key] = data
         results['img_metas'][0].update({'img_augmentation': img_aug})
-        results['img_metas'][0].update({'img_shape': img_shape})
+        results['img_metas'][0].update({'img_shape': [img_shape]})
         return results 
     else:
         return inputs

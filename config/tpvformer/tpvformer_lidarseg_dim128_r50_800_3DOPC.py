@@ -5,7 +5,6 @@ _base_ = [
 ]
 
 max_epochs = 12
-# load_from = './ckpts/resnet50-0676ba61.pth'
 load_from = None
 
 unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -221,7 +220,10 @@ model = dict(
         out_indices=(0, 1, 2, 3),
         frozen_stages=0,
         norm_eval=False,
-        style='pytorch',),
+        style='pytorch',
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='./ckpts/resnet50-0676ba61.pth')),
     img_neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],

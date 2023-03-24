@@ -106,7 +106,7 @@ model_inputs = dict(
 )
 
 max_num_epochs = 12
-load_from = './ckpts/resnet50-0676ba61.pth'
+load_from = None
 
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 
@@ -223,7 +223,10 @@ model = dict(
         out_indices=(0, 1, 2, 3),
         frozen_stages=0,
         norm_eval=False,
-        style='pytorch',),
+        style='pytorch',
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='./ckpts/resnet50-0676ba61.pth')),
     img_neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
