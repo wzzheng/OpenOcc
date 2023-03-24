@@ -3,6 +3,7 @@ import os, os.path as osp
 from copy import copy
 import torch, time, argparse
 import torch.distributed as dist
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 from model import *
 from loss import OPENOCC_LOSS

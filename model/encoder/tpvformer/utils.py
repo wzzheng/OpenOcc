@@ -174,11 +174,13 @@ def point_sampling(reference_points, pc_range, img_metas):
         # D, B, N, Q, 3
         post_trans = post_trans.view(1, B, num_cam, 1, 3)
         reference_points_cam = reference_points_cam + post_trans
+        tpv_mask = (reference_points_cam[..., 2:3] > eps)    
+        reference_points_cam = reference_points_cam[..., :2]
+    else:
+        tpv_mask = (reference_points_cam[..., 2:3] > eps)    
+        reference_points_cam = reference_points_cam[..., 0:2] / torch.maximum(
+            reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
 
-    tpv_mask = (reference_points_cam[..., 2:3] > eps)
-    # reference_points_cam = reference_points_cam[..., 0:2] / torch.maximum(
-    #     reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
-    
     reference_points_cam[..., 0] /= img_metas[0]['img_shape'][0][1]
     reference_points_cam[..., 1] /= img_metas[0]['img_shape'][0][0]
 
