@@ -5,8 +5,7 @@ _base_ = [
 ]
 
 max_epochs = 12
-# load_from = './ckpts/resnet50-0676ba61.pth'
-load_from = None
+load_from = './ckpts/resnet50-0676ba61.pth'
 
 unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 metric_ignore_label = 0
@@ -41,7 +40,7 @@ empty_idx = 0  # noise 0-->255
 occ_size = [tpv_w_, tpv_h_, tpv_z_]
 
 input_convertion = [
-    ['imgs', 'img', None, 'cuda'],
+    ['imgs', 'img_inputs', None, 'cuda'],
     ['metas', 'img_metas', None, None],
     ['processed_label', 'gt_occ', 'long', 'cuda'],
 ]
@@ -51,7 +50,7 @@ model_inputs = dict(
     metas='metas',
 )
 
-dataset_type = 'NuscenesOcc'
+dataset_type = 'NuScenes3DOcc'
 data_root = 'data/nuscenes/'
 file_client_args = dict(backend='disk')
 occ_path = "./data/nuScenes-Occupancy"
@@ -96,7 +95,7 @@ bda_aug_conf = dict(
 train_pipeline = [
     dict(type='LoadMultiViewImageFromFiles_BEVDet', is_train=True, data_config=data_config,
                 sequential=False, aligned=True, trans_only=False, depth_gt_path=depth_gt_path,
-                mmlabnorm=True, load_depth=True, img_norm_cfg=img_norm_cfg),
+                mmlabnorm=True, load_depth=False, img_norm_cfg=img_norm_cfg),
     dict(
         type='LoadAnnotationsBEVDepth',
         bda_aug_conf=bda_aug_conf,
@@ -148,9 +147,10 @@ train_config=dict(
         use_valid_flag=True,
         occ_size=occ_size,
         pc_range=point_cloud_range,
-        box_type_3d='LiDAR'),
+        box_type_3d='LiDAR')
 
 data = dict(
+    convert_inputs=True,
     samples_per_gpu=1,
     workers_per_gpu=4,
     train=train_config,

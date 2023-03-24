@@ -6,7 +6,7 @@ from nuscenes.eval.common.utils import quaternion_yaw, Quaternion
 from .occ_metrics import cm_to_ious, format_SC_results, format_SSC_results
 
 @DATASETS.register_module()
-class Nuscenes3DOcc(NuScenesDataset):
+class NuScenes3DOcc(NuScenesDataset):
     def __init__(self, occ_size, pc_range, occ_root, **kwargs):
         super().__init__(**kwargs)
         self.data_infos = list(sorted(self.data_infos, key=lambda e: e['timestamp']))

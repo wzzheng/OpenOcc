@@ -9,7 +9,6 @@ input_convertion = [
 model_inputs = dict(
     imgs='imgs',
     metas='metas',
-    points='points'
 )
 
 loss_inputs = dict(

@@ -95,6 +95,16 @@ val_wrapper = dict(
             permute_order=[2, 0, 1],)],
     pointcloudModal = pointcloudModal)
 
+data = dict(
+    convert_inputs=False,
+)
+
+model_inputs = dict(
+    imgs='imgs',
+    metas='metas',
+    points='points'
+)
+
 max_num_epochs = 12
 load_from = './ckpts/resnet50-0676ba61.pth'
 

@@ -359,9 +359,12 @@ class LoadMultiViewImageFromFiles_BEVDet(object):
             sensor2sensors.append(sensor2lidar)
 
         imgs = torch.stack(imgs)
+        # camera extrinsic, not change
         rots = torch.stack(rots)
         trans = torch.stack(trans)
+        # camera intrinsic, not change
         intrins = torch.stack(intrins)
+        # post-augmentation pixel to original pixel
         post_rots = torch.stack(post_rots)
         post_trans = torch.stack(post_trans)
         gt_depths = torch.stack(gt_depths)
