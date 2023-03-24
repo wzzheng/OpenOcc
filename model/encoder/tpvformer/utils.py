@@ -152,12 +152,11 @@ def point_sampling(reference_points, pc_range, img_metas):
     if 'img_augmentation' in img_metas[0] and \
         'post_rots' in img_metas[0]['img_augmentation'] and \
         img_metas[0]['img_augmentation']['post_rots']:
-    # if 'post_rots' in img_metas[0]:
         post_rots = []
         post_trans = []
         for img_meta in img_metas:
-            post_rots.append(img_meta['post_rots'])
-            post_trans.append(img_meta['post_trans'])
+            post_rots.append(img_meta['img_augmentation']['post_rots'])
+            post_trans.append(img_meta['img_augmentation']['post_trans'])
         post_rots = np.asarray(post_rots)
         post_trans = np.asarray(post_trans)
         post_rots = reference_points.new_tensor(post_rots)
