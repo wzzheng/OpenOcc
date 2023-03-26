@@ -28,6 +28,8 @@ def pass_print(*args, **kwargs):
 
 def main(local_rank, args):
     # global settings
+    if args.hfai:
+        os.environ['HFAI'] = 'true'
     torch.backends.cudnn.benchmark = True
 
     # load config
@@ -295,6 +297,7 @@ if __name__ == '__main__':
     parser.add_argument('--work-dir', type=str, default='./out/tpv_lidarseg')
     parser.add_argument('--dist', action='store_true')
     parser.add_argument('--resume-from', type=str, default='')
+    parser.add_argument('--hfai', action='store_true', default=False)
 
     args = parser.parse_args()
     
