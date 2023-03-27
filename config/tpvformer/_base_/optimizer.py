@@ -8,7 +8,7 @@ optimizer = dict(
     weight_decay=0.01
 )
 
-ignore_label = 0
+ignore_label = 255
 
 loss = dict(
     type='MultiLoss',

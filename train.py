@@ -3,7 +3,6 @@ import os, os.path as osp
 from copy import copy
 import torch, time, argparse
 import torch.distributed as dist
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 from model import *
 from loss import OPENOCC_LOSS
@@ -104,11 +103,14 @@ def main(local_rank, args):
         train_dataset_loader, val_dataset_loader = get_dataloader_occ(cfg=cfg)
     
     # get metric calculator
-    # label_str = train_dataset_loader.dataset.loader.nuScenes_label_name
-    # metric_label = cfg.unique_label
-    # metric_str = [label_str[x] for x in metric_label]
-    # metric_ignore_label = cfg.metric_ignore_label
-    # CalMeanIou_pts = MeanIoU(metric_label, metric_ignore_label, metric_str, 'pts')
+    if cfg.get('nuScenes_label_name', None):
+        label_str = cfg.nuScenes_label_name
+    else:
+        label_str = train_dataset_loader.dataset.loader.nuScenes_label_name
+    metric_label = cfg.unique_label
+    metric_str = [label_str[x] for x in metric_label]
+    metric_ignore_label = cfg.metric_ignore_label
+    CalMeanIou = MeanIoU(metric_label, metric_ignore_label, metric_str, 'vox')
 
     # get optimizer, loss, scheduler
     optimizer = build_optimizer(my_model, cfg.optimizer)
@@ -183,7 +185,6 @@ def main(local_rank, args):
                 if device is not None:
                     item = item.to(device)
                 new_inputs.update({new_name: item})
-                new_inputs.pop(old_name)
             data_time_e = time.time()
             
             # forward + backward + optimize
@@ -234,11 +235,14 @@ def main(local_rank, args):
         # eval
         my_model.eval()
         lossMeter.reset()
-        # CalMeanIou_pts.reset()
+        CalMeanIou.reset()
 
         with torch.no_grad():
             for i_iter_val, inputs in enumerate(val_dataset_loader):
-
+                if cfg.data.convert_inputs:
+                    from dataset import convert_inputs
+                    inputs = convert_inputs(inputs=inputs, dataset_type=cfg.data.train.type)
+                
                 new_inputs = copy(inputs)
                 for new_name, old_name, dtype, device in cfg.input_convertion:
                     item = inputs[old_name]
@@ -261,27 +265,27 @@ def main(local_rank, args):
                     loss_inputs.update({loss_arg_name: new_inputs[input_name]})
                 loss, _ = multi_loss_func(loss_inputs)
 
-                predict_labels_pts = new_inputs['outputs_pts']
-                val_pt_labs = new_inputs['point_labels']
-                predict_labels_pts = predict_labels_pts.squeeze(-1).squeeze(-1)
-                predict_labels_pts = torch.argmax(predict_labels_pts, dim=1) # bs, n
-                predict_labels_pts = predict_labels_pts.detach().cpu()
-                val_pt_labs = val_pt_labs.squeeze(-1).cpu()
+                predict_labels = new_inputs['outputs_vox']
+                val_labs = new_inputs['voxel_labels']
+                predict_labels = predict_labels.squeeze(-1).squeeze(-1)
+                predict_labels = torch.argmax(predict_labels, dim=1) # bs, n
+                predict_labels = predict_labels.detach().cpu()
+                val_labs = val_labs.squeeze(-1).cpu()
                 
-                # for count in range(len(predict_labels_pts)):
-                #     CalMeanIou_pts._after_step(predict_labels_pts[count], val_pt_labs[count])
+                for count in range(len(predict_labels)):
+                    CalMeanIou._after_step(predict_labels[count], val_labs[count])
                 
                 lossMeter.update(loss.detach().cpu().item())
                 if i_iter_val % print_freq == 0 and local_rank == 0 and rank == 0:
                     logger.info('[EVAL] Epoch %d Iter %5d: Loss: %.3f (%.3f)'%(
                         epoch, i_iter_val, lossMeter.val, lossMeter.avg))
         
-        # val_miou_pts = CalMeanIou_pts._after_epoch()
+        val_miou_pts = CalMeanIou._after_epoch()
 
-        # if best_val_miou_pts < val_miou_pts:
-        #     best_val_miou_pts = val_miou_pts
-        # logger.info('Current val miou pts is %.3f while the best val miou pts is %.3f' %
-        #         (val_miou_pts, best_val_miou_pts))
+        if best_val_miou_pts < val_miou_pts:
+            best_val_miou_pts = val_miou_pts
+        logger.info('Current val miou pts is %.3f while the best val miou pts is %.3f' %
+                (val_miou_pts, best_val_miou_pts))
         logger.info('Current val loss is %.3f' %
                 (lossMeter.avg))
         

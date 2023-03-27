@@ -155,8 +155,8 @@ def point_sampling(reference_points, pc_range, img_metas):
         post_rots = []
         post_trans = []
         for img_meta in img_metas:
-            post_rots.append(img_meta['img_augmentation']['post_rots'].numpy())
-            post_trans.append(img_meta['img_augmentation']['post_trans'].numpy())
+            post_rots.append(img_meta['img_augmentation']['post_rots'].cpu().numpy())
+            post_trans.append(img_meta['img_augmentation']['post_trans'].cpu().numpy())
         post_rots = np.asarray(post_rots)
         post_trans = np.asarray(post_trans)
         post_rots = reference_points.new_tensor(post_rots)

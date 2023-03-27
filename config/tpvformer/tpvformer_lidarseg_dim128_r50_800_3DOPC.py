@@ -8,7 +8,7 @@ max_epochs = 12
 load_from = None
 
 unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-metric_ignore_label = 0
+metric_ignore_label = 255
 
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 

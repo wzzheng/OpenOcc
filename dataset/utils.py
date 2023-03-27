@@ -46,7 +46,7 @@ def convert_inputs(inputs, dataset_type):
                 results[key] = data.data[0]
             elif key == 'img_inputs':
                 results[key] = data[0]
-                img_shape = data[0].shape
+                img_shape = list(data[0].shape[-2:])
                 for i in range(6):
                     img_aug.update({img_aug_name[i]: data[i+1]})
             else:

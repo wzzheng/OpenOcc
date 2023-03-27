@@ -123,5 +123,5 @@ class TPVHead(BaseSegmentor):
             logits = logits.permute(0, 4, 1, 2, 3)
         
             return {
-                'outputs_vox': logits_vox
+                'outputs_vox': logits
             }

@@ -8,7 +8,7 @@ max_epochs = 12
 load_from = None
 
 unique_label = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-metric_ignore_label = 0
+metric_ignore_label = 255
 
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 
@@ -20,9 +20,9 @@ _num_levels_ = 4
 _num_cams_ = 6
 scale_rate = 0.5
 
-tpv_h_ = 200
-tpv_w_ = 200
-tpv_z_ = 16
+tpv_h_ = 128
+tpv_w_ = 128
+tpv_z_ = 10
 scale_h = 1
 scale_w = 1
 scale_z = 1
@@ -42,12 +42,19 @@ occ_size = [tpv_w_, tpv_h_, tpv_z_]
 input_convertion = [
     ['imgs', 'img_inputs', None, 'cuda'],
     ['metas', 'img_metas', None, None],
-    ['processed_label', 'gt_occ', 'long', 'cuda'],
+    ['voxel_labels', 'gt_occ', 'long', 'cuda'],
 ]
 
 model_inputs = dict(
     imgs='imgs',
     metas='metas',
+)
+
+loss_inputs = dict(
+    ce_input='outputs_vox',
+    ce_target='voxel_labels',
+    lovasz_softmax_input='outputs_vox',
+    lovasz_softmax_target='voxel_labels'
 )
 
 dataset_type = 'NuScenes3DOcc'
@@ -57,6 +64,10 @@ occ_path = "./data/nuScenes-Occupancy"
 depth_gt_path = './data/depth_gt'
 train_ann_file = "./data/nuscenes/nuscenes_occ_infos_train.pkl"
 val_ann_file = "./data/nuscenes/nuscenes_occ_infos_val.pkl"
+
+nuScenes_label_name = {0: 'noise', 16: 'vegetation', 15: 'manmade', 14: 'terrain', 13: 'sidewalk', 12: 'other_flat', 
+                       11: 'driveable_surface', 10: 'truck', 9: 'trailer', 6: 'motorcycle', 5: 'construction_vehicle', 
+                       4: 'car', 3: 'bus', 2: 'bicycle', 8: 'traffic_cone', 1: 'barrier', 7: 'pedestrian'}
 
 class_names = [
     'car', 'truck', 'construction_vehicle', 'bus', 'trailer', 'barrier',
@@ -152,7 +163,7 @@ train_config=dict(
 data = dict(
     convert_inputs=True,
     samples_per_gpu=1,
-    workers_per_gpu=4,
+    workers_per_gpu=0,
     train=train_config,
     val=test_config,
     test=test_config,
