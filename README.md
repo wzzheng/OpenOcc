@@ -145,3 +145,35 @@ bash launcher.sh config/tpvconv/tpvconv_lidarseg_dim384_r50_800_layer10.py out/t
 bash launcher.sh config/tpvconv/tpvconv_lidarseg_dim384_r50_800_layer10_depthlss.py out/tpvconv_lidarseg_dim384_r50_800_layer10_depthlss
 ```
 
+## HFAI Compatibility
+
+There are only two steps to launch experiments on High-Flyer AI Platform.
+
+### Prepare dataset
+
+1. Create soft link from hfai_nuscenes_path to data/nuscenes
+
+2. Download nuScenes-lidarseg-all-v1.0.tar from nuscenes.org, and extract files to data/lidarseg
+
+3. Download maps.tar.gz from https://cloud.tsinghua.edu.cn/f/a74a0dd52bb9459699f2/?dl=1, and extract files to data/maps
+
+4. The final data/ directory should be organized as follows.
+
+```
+OpenOcc/data
+    nuscenes
+    lidarseg
+        lidarseg
+        v1.0-mini
+        v1.0-trainval
+        v1.0-test
+    maps
+        *.png
+    nuscenes_infos_train.pkl
+    nuscenes_infos_val.pkl
+```
+
+### Getting started
+
+Simply add --hfai to your shell command to launch experiments on High-Flyer AI Platform.
+
